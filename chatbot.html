@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="w-full max-w-md bg-white rounded-lg shadow-md flex flex-col">
+    <!-- Header -->
+    <div class="border-b px-4 py-3 text-center font-bold text-xl">
+      AI Chatbot
+    </div>
+
+    <!-- Chat Messages -->
+    <div id="chat" class="flex-1 px-4 py-2 overflow-y-auto h-96 space-y-2">
+      <div class="text-gray-400 text-center mt-10" id="placeholder">Send a message to start the conversation</div>
+    </div>
+
+    <!-- Input -->
+    <div class="border-t px-4 py-3 flex">
+      <input
+        id="userInput"
+        type="text"
+        placeholder="Type your message..."
+        class="flex-1 border border-gray-300 rounded-l px-4 py-2 focus:outline-none"
+        onkeydown="if(event.key==='Enter') sendMessage()"
+      />
+      <button
+        onclick="sendMessage()"
+        class="bg-gray-400 text-white px-4 py-2 rounded-r"
+      >
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"
+             viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 2L11 13" />
+          <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const chat = document.getElementById('chat');
+      const placeholder = document.getElementById('placeholder');
+      const message = input.value.trim();
+
+      if (!message) return;
+
+      // Remove placeholder if it's still there
+      if (placeholder) placeholder.remove();
+
+      // Show user message
+      const userMsg = document.createElement('div');
+      userMsg.className = 'bg-blue-100 text-blue-900 px-4 py-2 rounded max-w-xs ml-auto';
+      userMsg.textContent = message;
+      chat.appendChild(userMsg);
+      input.value = '';
+
+      // Scroll to bottom
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        const response = await fetch('/reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+
+        // Show bot response
+        const botMsg = document.createElement('div');
+        botMsg.className = 'bg-gray-200 text-gray-900 px-4 py-2 rounded max-w-xs mr-auto';
+        botMsg.textContent = data.reply;
+        chat.appendChild(botMsg);
+
+        // Scroll to bottom
+        chat.scrollTop = chat.scrollHeight;
+      } catch (error) {
+        const errMsg = document.createElement('div');
+        errMsg.className = 'text-red-600 text-sm mt-2';
+        errMsg.textContent = 'Error communicating with the server.';
+        chat.appendChild(errMsg);
+      }
+    }
+  </script>
+</body>
+</html>
